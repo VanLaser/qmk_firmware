@@ -1,0 +1,18 @@
+PS2 -> PS/2 Keyboard pins
+BLE -> Bluefruit BLE SPI Friend module
+
+                     Pro Micro 5V
+                     --------
+              TX   D3 |      | RAW (+5V from USB)
+              RX   D0 |      | GND
+(BLE GROUND)      GND |      | RST
+(PS2 GROUND)      GND |      | VCC (+5V) (PS2 VCC) (BLE VIN)
+(PS2 CLOCK)   SDA  D1 |      | F4 
+(PS2 DATA)    SCL  D0 |      | F5
+(BLE CS)           D4 |      | F6
+(BLE IRQ)          C6 |      | F7
+(BLE RESET)        D7 |      | B1 SCLK   (BLE SCK)
+                   E6 |      | B3 MISO   (BLE MISO)
+                   B4 |      | B2 MOSI   (BLE MOSI)
+                   B5 |      | B6
+                      --------
