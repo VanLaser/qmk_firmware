@@ -75,6 +75,7 @@ static bool is_modified = false;
 void matrix_init(void)
 {
     debug_enable = true;
+    debug_keyboard = true;
 
 #if (F_CPU == 8000000)
     clock_prescale_set(clock_div_2); // 16MHz crystal divided by 2
