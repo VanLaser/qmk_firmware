@@ -9,21 +9,22 @@
 #include "timer.h"
 #include "action_util.h"
 #include "ringbuffer.hpp"
+#include "pro_micro.h"
 #include <string.h>
 
 // These are the pin assignments for the 32u4 boards.
 // You may define them to something else in your config.h
 // if yours is wired up differently.
 #ifndef AdafruitBleResetPin
-#define AdafruitBleResetPin D4
+#define AdafruitBleResetPin PD7
 #endif
 
 #ifndef AdafruitBleCSPin
-#define AdafruitBleCSPin    B4
+#define AdafruitBleCSPin    PD4
 #endif
 
 #ifndef AdafruitBleIRQPin
-#define AdafruitBleIRQPin   E6
+#define AdafruitBleIRQPin   PC6
 #endif
 
 
@@ -153,6 +154,9 @@ void SPI_init(struct SPI_Settings *spi) {
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     // Ensure that SS is OUTPUT High
+#define B0 SS
+#define B1 SCK
+#define B2 MOSI
     digitalWrite(B0, PinLevelHigh);
     pinMode(B0, PinDirectionOutput);
 
@@ -387,6 +391,7 @@ static bool ble_init(void) {
   pinMode(AdafruitBleCSPin, PinDirectionOutput);
   digitalWrite(AdafruitBleCSPin, PinLevelHigh);
 
+  print("ble_init\n");
   SPI_init(&spi);
 
   // Perform a hardware reset
@@ -524,9 +529,26 @@ bool adafruit_ble_is_connected(void) {
 bool adafruit_ble_enable_keyboard(void) {
   char resbuf[128];
 
-  if (!state.initialized && !ble_init()) {
+  /*if (!state.initialized && !ble_init()) {
     return false;
+  }*/
+
+  xprintf("B1: %d, B2: %d, MOSI: %d, SCK: %d\n", B1, B2, MOSI, SCK);
+  xprintf("AdafruitBleResetPin: %d, AdafruitBleCSPin: %d, AdafruitBleIRQPin: %d \n",
+		  AdafruitBleResetPin, AdafruitBleCSPin, AdafruitBleIRQPin);        
+  if (!state.initialized)
+  {
+	  print("state.initialized = FALSE\n");
+	  if (!ble_init())
+	  {
+		  print("ble_init() failed\n");
+		  return false;
+	  }
+	  else
+		  print("ble_init() succeeded\n");
   }
+  else
+	  print("state.initialized = TRUE\n");
 
   state.configured = false;
 
@@ -577,10 +599,10 @@ bool adafruit_ble_enable_keyboard(void) {
   // to kick in.
   state.last_connection_update = timer_read();
 fail:
-  if (state.configured)
-	  print("adafruit_ble_enable_keyboard OK");
+  /*if (state.configured)
+	  print("adafruit_ble_enable_keyboard OK\n");
   else
-	  print("adafruit_ble_enable_keyboard ERROR");
+	  print("adafruit_ble_enable_keyboard ERROR\n");*/
   return state.configured;
 }
 

@@ -39,9 +39,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // see quantum/config_common.h for codes
 #include "config_common.h"
-#define AdafruitBleResetPin D7
-#define AdafruitBleCSPin D4
-#define AdafruitBleIRQPin C6
+//#define AdafruitBleResetPin D7
+//#define AdafruitBleCSPin D4
+//#define AdafruitBleIRQPin C6
 //#define AdafruitBlePowerPin D7
 
 // Turn off the mode leds on the BLE module
