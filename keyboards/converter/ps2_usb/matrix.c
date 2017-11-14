@@ -76,7 +76,7 @@ static bool is_modified = false;
 void matrix_init(void)
 {
     debug_enable = true;
-    debug_keyboard = true;
+    //debug_keyboard = true;
 
 #if (F_CPU == 8000000)
     clock_prescale_set(clock_div_2); // 16MHz crystal divided by 2
@@ -94,8 +94,8 @@ void matrix_init(void)
   adafruit_ble_enable_keyboard();
 #elif defined(ADAFRUIT_BLE_ENABLE) && ADAFRUIT_BLE_ENABLE_MODE_LEDS
   adafruit_ble_set_mode_leds(true);
-#elif defined(ADAFRUIT_BLE_ENABLE)
-  adafruit_ble_enable_keyboard();
+//#elif defined(ADAFRUIT_BLE_ENABLE)
+//  adafruit_ble_enable_keyboard();
 #endif
 
     return;

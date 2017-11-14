@@ -149,7 +149,7 @@ void SPI_init(struct SPI_Settings *spi) {
   spi->spcr = _BV(SPE) | _BV(MSTR);
   spi->spsr = _BV(SPI2X);
 
-  static_assert(SpiBusSpeed == F_CPU / 2, "hard coded at 4Mhz");
+  //static_assert(SpiBusSpeed == F_CPU / 2, "hard coded at 4Mhz");
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     // Ensure that SS is OUTPUT High
@@ -577,6 +577,10 @@ bool adafruit_ble_enable_keyboard(void) {
   // to kick in.
   state.last_connection_update = timer_read();
 fail:
+  if (state.configured)
+	  print("adafruit_ble_enable_keyboard OK");
+  else
+	  print("adafruit_ble_enable_keyboard ERROR");
   return state.configured;
 }
 
