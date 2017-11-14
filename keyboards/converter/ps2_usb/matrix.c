@@ -27,11 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix.h"
 #include "outputselect.h"
 #include "pincontrol.h"
+#include "pro_micro.h" // taken from 'let's split' code
 #ifdef ADAFRUIT_BLE_ENABLE
 #include "adafruit_ble.h"
 #endif
 #include <avr/power.h>
-#include "pro_micro.h" // taken from 'let's split' code
 
 static void matrix_make(uint8_t code);
 static void matrix_break(uint8_t code);
