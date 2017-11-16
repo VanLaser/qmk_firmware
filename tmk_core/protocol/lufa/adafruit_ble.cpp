@@ -154,16 +154,13 @@ void SPI_init(struct SPI_Settings *spi) {
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     // Ensure that SS is OUTPUT High
-#define B0 SS
-#define B1 SCK
-#define B2 MOSI
-    digitalWrite(B0, PinLevelHigh);
-    pinMode(B0, PinDirectionOutput);
+    digitalWrite(SS, PinLevelHigh);
+    pinMode(SS, PinDirectionOutput);
 
     SPCR |= _BV(MSTR);
     SPCR |= _BV(SPE);
-    pinMode(B1 /* SCK */, PinDirectionOutput);
-    pinMode(B2 /* MOSI */, PinDirectionOutput);
+    pinMode(SCK /* SCK */, PinDirectionOutput);
+    pinMode(MOSI /* MOSI */, PinDirectionOutput);
   }
 }
 
@@ -533,7 +530,7 @@ bool adafruit_ble_enable_keyboard(void) {
     return false;
   }*/
 
-  xprintf("B1: %d, B2: %d, MOSI: %d, SCK: %d\n", B1, B2, MOSI, SCK);
+  xprintf("PB0: %d, PB1: %d, PB2: %d, MOSI: %d, SCK: %d\n", PB0, PB1, PB2, MOSI, SCK);
   xprintf("AdafruitBleResetPin: %d, AdafruitBleCSPin: %d, AdafruitBleIRQPin: %d \n",
 		  AdafruitBleResetPin, AdafruitBleCSPin, AdafruitBleIRQPin);        
   if (!state.initialized)

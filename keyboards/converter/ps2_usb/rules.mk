@@ -21,7 +21,6 @@ F_CPU = 8000000
 #
 # Target architecture (see library "Board Types" documentation).
 ARCH = AVR8
-
 # Input clock frequency.
 #     This will define a symbol, F_USB, in all source code files equal to the
 #     input clock frequency (before any prescaling is performed) in Hz. This value may
