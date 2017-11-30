@@ -38,11 +38,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // TODO: change values to actual pins which will be used
 
 // see quantum/config_common.h for codes
-//#include "config_common.h"
-//#include "pro_micro.h"
-//#define AdafruitBleResetPin D7
-//#define AdafruitBleCSPin D4
-//#define AdafruitBleIRQPin C6
+#include "config_common.h"
+#define AdafruitBleResetPin D7
+#define AdafruitBleCSPin D4
+#define AdafruitBleIRQPin E6
+// not used (doesn't apply):
 //#define AdafruitBlePowerPin D7
 
 // Turn off the mode leds on the BLE module

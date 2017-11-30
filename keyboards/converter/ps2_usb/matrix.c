@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix.h"
 #include "outputselect.h"
 #include "pincontrol.h"
-#include "pro_micro.h" // taken from 'let's split' code
+#include "config.h"
 #ifdef ADAFRUIT_BLE_ENABLE
 #include "adafruit_ble.h"
 #endif
@@ -98,6 +98,7 @@ void matrix_init(void)
 //  adafruit_ble_enable_keyboard();
 #endif
 
+    matrix_init_quantum();
     return;
 }
 
@@ -402,6 +403,7 @@ uint8_t matrix_scan(void)
         xprintf("Resend: %02X\n", ret);
     }
 */
+    matrix_scan_quantum();
     return 1;
 }
 

@@ -10,23 +10,24 @@
 #include "action_util.h"
 #include "ringbuffer.hpp"
 #include <string.h>
+#include "LUFA/Drivers/Peripheral/SPI.h"
 
 // These are the pin assignments for the 32u4 boards.
 // You may define them to something else in your config.h
 // if yours is wired up differently.
 #ifndef AdafruitBleResetPin
-#define AdafruitBleResetPin D7
+#define AdafruitBleResetPin PD7
+//#define AdafruitBleResetPin -1
 #endif
 
 #ifndef AdafruitBleCSPin
-#define AdafruitBleCSPin    D4
+#define AdafruitBleCSPin    PD4
 #endif
 
 #ifndef AdafruitBleIRQPin
-#define AdafruitBleIRQPin   C6
+#define AdafruitBleIRQPin   PC6
 #endif
 
-#define VERBOSE 1
 
 #define SAMPLE_BATTERY
 #define ConnectionUpdateInterval 1000 /* milliseconds */
@@ -152,43 +153,29 @@ static inline void SPI_begin(struct SPI_Settings*spi) {
 
 // Initialize 4Mhz MSBFIRST MODE0
 void SPI_init(struct SPI_Settings *spi) {
-  spi->spcr = _BV(SPE) | _BV(MSTR); // enable SPI, mode: master
+  spi->spcr = _BV(SPE) | _BV(MSTR);
+  //spi->spcr = _BV(SPE) | _BV(MSTR) | _BV(SPR0) | _BV(SPR1);
+  //spi->spsr = _BV(SPI2X);
+  spi->spsr = 0;
 
-  // F_CPU = 16000000
-#if (F_CPU == 16000000)
-  {
-	  spi->spsr = 0; // divide clock by 4
-	  static_assert(SpiBusSpeed == F_CPU / 4, "hard coded at 4Mhz");
-  }
-#elif (F_CPU == 8000000)
-  // F_CPU == 8000000
-  {
-	  spi->spsr = _BV(SPI2X); // double speed
-	  static_assert(SpiBusSpeed == F_CPU / 2, "hard coded at 4Mhz");
-  }
-#else
-  static_assert(0 == !0, "Unsupported F_CPU value");
-#endif
-
-
+  //static_assert(SpiBusSpeed == F_CPU / 2, "hard coded at 4Mhz");
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     // Ensure that SS is OUTPUT High
-    digitalWrite(B0, PinLevelHigh);
-    pinMode(B0, PinDirectionOutput);
+    digitalWrite(PB0, PinLevelHigh);
+    pinMode(PB0, PinDirectionOutput);
 
-    //SPSR = 0;
-    //SPCR = 0;
-    //SPCR |= _BV(MSTR);
-    //SPCR |= _BV(SPE);
     SPI_begin(spi);
 
-    pinMode(B1 /* SCK */, PinDirectionOutput);
-    pinMode(B2 /* MOSI */, PinDirectionOutput);
-    pinMode(B3 /* MISO */, PinDirectionInput);
+    pinMode(PB1 /* SCK */, PinDirectionOutput);
+    pinMode(PB2 /* MOSI */, PinDirectionOutput);
+    // MISO!
+    pinMode(PB3 /*MISO */, PinDirectionInput);
+    digitalWrite(PB3, PinLevelHigh); // pull-up
   }
 }
 
+/*
 static inline uint8_t SPI_TransferByte(uint8_t data) {
   SPDR = data;
   asm volatile("nop");
@@ -196,7 +183,7 @@ static inline uint8_t SPI_TransferByte(uint8_t data) {
     ; // wait
   }
   return SPDR;
-}
+}*/
 
 static inline void spi_send_bytes(const uint8_t *buf, uint8_t len) {
   if (len == 0) return;
@@ -257,6 +244,7 @@ static bool sdep_send_pkt(const struct sdep_msg *msg, uint16_t timeout) {
       break;
     }
 
+    xprintf("not ready\n");
     // Release it and let it initialize
     digitalWrite(AdafruitBleCSPin, PinLevelHigh);
     _delay_us(SdepBackOff);
@@ -268,6 +256,7 @@ static bool sdep_send_pkt(const struct sdep_msg *msg, uint16_t timeout) {
     spi_send_bytes(&msg->cmd_low,
                    sizeof(*msg) - (1 + sizeof(msg->payload)) + msg->len);
     success = true;
+    xprintf("slave is ready, SPIF = %d, PB3 = %d\n", SPIF, PB3);
   }
 
   digitalWrite(AdafruitBleCSPin, PinLevelHigh);
@@ -301,11 +290,12 @@ static bool sdep_recv_pkt(struct sdep_msg *msg, uint16_t timeout) {
       break;
     }
     _delay_us(1);
+    //print("waiting in sdep_recv_pkt\n");
   } while (timer_elapsed(timerStart) < timeout);
 
   if (ready) {
     SPI_begin(&spi);
-
+    //print("ready to recv pkt\n");
     digitalWrite(AdafruitBleCSPin, PinLevelLow);
 
     do {
@@ -319,6 +309,7 @@ static bool sdep_recv_pkt(struct sdep_msg *msg, uint16_t timeout) {
         continue;
       }
 
+      print("ready to read the rest of the header\n");
       // Read the rest of the header
       spi_recv_bytes(&msg->cmd_low, sizeof(*msg) - (1 + sizeof(msg->payload)));
 
@@ -332,6 +323,7 @@ static bool sdep_recv_pkt(struct sdep_msg *msg, uint16_t timeout) {
 
     digitalWrite(AdafruitBleCSPin, PinLevelHigh);
   }
+  //xprintf("sdep_recv_pkt: %d\n", success);
   return success;
 }
 
@@ -412,11 +404,20 @@ static bool ble_init(void) {
   SPI_init(&spi);
 
   // Perform a hardware reset
+#if AdafruitBleResetPin != -1
   pinMode(AdafruitBleResetPin, PinDirectionOutput);
   digitalWrite(AdafruitBleResetPin, PinLevelHigh);
   digitalWrite(AdafruitBleResetPin, PinLevelLow);
   _delay_ms(10);
   digitalWrite(AdafruitBleResetPin, PinLevelHigh);
+#else
+    // Software reset
+  struct sdep_msg msg;
+  sdep_build_pkt(&msg, BleInitialize, nullptr, 0, true);
+  if (!sdep_send_pkt(&msg, 1000)) {
+    return false;
+  }
+#endif
 
   _delay_ms(1000); // Give it a second to initialize
 
@@ -436,7 +437,8 @@ static bool read_response(char *resp, uint16_t resplen, bool verbose) {
     struct sdep_msg msg;
 
     if (!sdep_recv_pkt(&msg, 2 * SdepTimeout)) {
-      dprint("sdep_recv_pkt failed\n");
+      //dprint("sdep_recv_pkt failed\n");
+      print("sdep_recv_pkt failed\n");
       return false;
     }
 
@@ -493,7 +495,8 @@ static bool at_command(const char *cmd, char *resp, uint16_t resplen,
   struct sdep_msg msg;
 
   if (verbose) {
-    dprintf("ble send: %s\n", cmd);
+    //dprintf("ble send: %s\n", cmd);
+    xprintf("ble send: %s\n", cmd);
   }
 
   if (resp) {
@@ -534,9 +537,6 @@ static bool at_command(const char *cmd, char *resp, uint16_t resplen,
 }
 
 bool at_command_P(const char *cmd, char *resp, uint16_t resplen, bool verbose) {
-#ifdef VERBOSE
-	verbose = true;
-#endif
   auto cmdbuf = (char *)alloca(strlen_P(cmd) + 1);
   strcpy_P(cmdbuf, cmd);
   return at_command(cmdbuf, resp, resplen, verbose);
@@ -553,9 +553,14 @@ bool adafruit_ble_enable_keyboard(void) {
     return false;
   }*/
 
-  //xprintf("PB0: %d, PB1: %d, PB2: %d, MOSI: %d, SCK: %d\n", PB0, PB1, PB2, MOSI, SCK);
-  //xprintf("AdafruitBleResetPin: %d, AdafruitBleCSPin: %d, AdafruitBleIRQPin: %d \n",
-//		  AdafruitBleResetPin, AdafruitBleCSPin, AdafruitBleIRQPin);        
+  //xprintf("PB0: %d, PB1: %d, PB2: %d, SS: %d, MOSI: %d, SCK: %d\n", PB0, PB1, PB2, SS, MOSI, SCK);
+  xprintf("AdafruitBleResetPin: %d, AdafruitBleCSPin: %d, AdafruitBleIRQPin: %d \n",
+		  AdafruitBleResetPin, AdafruitBleCSPin, AdafruitBleIRQPin);        
+  if (SPI_GetCurrentMode() == SPI_MODE_MASTER)
+	  xprintf("SPI is in master mode\n");
+  else
+	  xprintf("SPI is in slave mode\n");
+
   if (!state.initialized)
   {
 	  print("state.initialized = FALSE\n");
@@ -608,7 +613,8 @@ bool adafruit_ble_enable_keyboard(void) {
     memcpy_P(&cmd, configure_commands + i, sizeof(cmd));
 
     if (!at_command_P(cmd, resbuf, sizeof(resbuf))) {
-      dprintf("failed BLE command: %S: %s\n", cmd, resbuf);
+      //dprintf("failed BLE command: %S: %s\n", cmd, resbuf);
+      xprintf("failed BLE command: %S: %s\n", cmd, resbuf);
       goto fail;
     }
   }
