@@ -55,9 +55,9 @@ OPT_DEFS += -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE)
 # Build Options
 #   change yes to no to disable
 #
-#ADAFRUIT_BLE_ENABLE ?= no    # Enable Bluetooth with the Adafruit BLE boards
-BLUETOOTH= AdafruitBLE
-ADAFRUIT_BLE_ENABLE ?= yes   # Enable Bluetooth with the Adafruit BLE boards
+ADAFRUIT_BLE_ENABLE ?= no    # Enable Bluetooth with the Adafruit BLE boards
+#BLUETOOTH= AdafruitBLE
+#ADAFRUIT_BLE_ENABLE ?= yes   # Enable Bluetooth with the Adafruit BLE boards
 BOOTMAGIC_ENABLE ?= no       # Virtual DIP switch configuration(+1000)
 MOUSEKEY_ENABLE ?= no        # Mouse keys(+4700)
 EXTRAKEY_ENABLE ?= yes       # Audio control and System control(+450)
@@ -78,8 +78,8 @@ FAUXCLICKY_ENABLE ?= no      # Use buzzer to emulate clicky switches
 # PS/2 Options
 #
 #PS2_USE_USART ?= yes	# uses hardware USART engine for PS/2 signal receive(recomened)
-PS2_USE_INT ?= yes	# uses external interrupt for falling edge of PS/2 clock pin
-#PS2_USE_BUSYWAIT ?= yes	# uses primitive reference code
+#PS2_USE_INT ?= yes	# uses external interrupt for falling edge of PS/2 clock pin
+PS2_USE_BUSYWAIT ?= yes	# uses primitive reference code
 
 # Optimize size but this may cause error "relocation truncated to fit"
 #EXTRALDFLAGS = -Wl,--relax
